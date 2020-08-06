@@ -1,0 +1,65 @@
+# -*-Python-*-
+# Decodes from (loudness, f0). Has a trainable reverb component as well.
+# Since it uses a trainable reverb, training data should all be from the same
+# acoustic environment.
+
+import training
+
+# =====
+# Model
+# =====
+
+get_model.model = @models.Autoencoder()
+
+# Preprocessor
+Autoencoder.preprocessor = @preprocessing.DefaultPreprocessor()
+DefaultPreprocessor.time_steps = 800
+
+# Encoder
+Autoencoder.encoder = @encoders.MfccTimeDistributedRnnEncoder()
+MfccTimeDistributedRnnEncoder.rnn_channels = 512
+MfccTimeDistributedRnnEncoder.rnn_type = 'gru'
+MfccTimeDistributedRnnEncoder.z_dims = 16
+MfccTimeDistributedRnnEncoder.z_time_steps = 125
+
+# Decoder
+Autoencoder.decoder = @decoders.RnnFcDecoder()
+RnnFcDecoder.rnn_channels = 512
+RnnFcDecoder.rnn_type = 'gru'
+RnnFcDecoder.ch = 512
+RnnFcDecoder.layers_per_stack = 3
+RnnFcDecoder.input_keysM = ('ld_scaledM', 'f0_scaledM', 'zM')
+RnnFcDecoder.input_keysL = ('ld_scaledL', 'f0_scaledL', 'zL')
+RnnFcDecoder.input_keysR = ('ld_scaledR', 'f0_scaledR', 'zR')
+RnnFcDecoder.output_splitsM = (('amps', 1), ('harmonic_distribution', 120), ('noise_magnitudes', 65))
+RnnFcDecoder.output_splitsL = (('amps', 1), ('harmonic_distribution', 120), ('noise_magnitudes', 65))
+RnnFcDecoder.output_splitsR = (('amps', 1), ('harmonic_distribution', 120), ('noise_magnitudes', 65))
+
+# Losses
+SpectralLoss.loss_type = 'L2'
+
+# ==============
+# ProcessorGroup
+# ==============
+
+# Additive Synthesizer
+Additive.name = 'additive'
+Additive.sample_rate = 48000
+Additive.normalize_below_nyquist = True
+Additive.scale_fn = @core.exp_sigmoid
+
+# Filtered Noise Synthesizer
+FilteredNoise.name = 'filtered_noise'
+FilteredNoise.window_size = 0
+FilteredNoise.scale_fn = @core.exp_sigmoid
+
+# Reverb
+Reverb.name = 'reverb'
+Reverb.reverb_length = 192000
+Reverb.trainable = True
+
+# Add
+Add.name = 'add'
+
+
+
