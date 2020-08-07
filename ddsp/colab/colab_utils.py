@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Helper functions for running DDSP colab notebooks."""
 
@@ -20,9 +22,6 @@ import io
 import pickle
 import tempfile
 
-# from math import log
-
-# import ddsp
 from IPython import display
 import librosa
 import matplotlib.pyplot as plt
@@ -502,6 +501,7 @@ def fit_quantile_transform(loudness_db, mask_on, inv_quantile=None):
 
 def save_dataset_statistics(data_provider, file_path, batch_size=128):
   """Calculate dataset stats and save in a pickle file."""
+  # adapted for stereo
   print('Calculating dataset statistics for', data_provider)
   data_iter = iter(data_provider.get_batch(batch_size, repeats=1))
 
@@ -520,13 +520,10 @@ def save_dataset_statistics(data_provider, file_path, batch_size=128):
   audioL = []
   audioR = []
   
-  print("---loudness1---")
-
   for batch in data_iter:
     loudnessM.append(batch['loudness_dbM'])
     loudnessL.append(batch['loudness_dbL'])
     loudnessR.append(batch['loudness_dbR'])
-    print("---loudness2---")
     f0M.append(batch['f0_hzM'])
     f0L.append(batch['f0_hzL'])
     f0R.append(batch['f0_hzR'])
@@ -727,13 +724,7 @@ def get_fft_size(frame_size: int, ir_size: int, power_of_2: bool = True) -> int:
 
 def hz_to_midi(frequencies: Number) -> Number:
   """TF-compatible hz_to_midi function."""
-  print('---frequencies1---')
-  print(frequencies)
-  print(frequencies.shape)
   frequencies = tf_float32(frequencies)
-  print('---frequencies2---')
-  print(frequencies)
-  print(frequencies.shape)
   notes = 12.0 * (tf.math.log(frequencies, 2.0) - tf.math.log(440.0, 2.0)) + 69.0
   # Map 0 Hz to MIDI 0 (Replace -inf with 0.)
   cond = tf.equal(notes, -np.inf)
