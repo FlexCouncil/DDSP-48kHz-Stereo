@@ -16,6 +16,8 @@ synthesizers, waveshapers, and filters). This allows these
 interpretable elements to be used as part of an deep learning model, especially
 as the output layers for audio generation.
 
+Please note that this version of DDSP has been altered from the original. The sample rate is now 48kHz (was 16kHz) and it is also stereo (was mono). I left all the original README information in place because it is general and applies to this version as well. You can try out my modifications in this [Colaboratory Demo](./ddsp/colab/timbre_transfer.ipynb).
+
 ## Getting Started
 
 First, follow the steps in the [**Installation**](#Installation) section
