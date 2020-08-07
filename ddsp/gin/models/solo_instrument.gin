@@ -3,6 +3,8 @@
 # Since it uses a trainable reverb, training data should all be from the same
 # acoustic environment.
 
+# This file has been modified from the original
+
 import training
 
 # =====
@@ -36,7 +38,7 @@ RnnFcDecoder.output_splitsL = (('amps', 1), ('harmonic_distribution', 120), ('no
 RnnFcDecoder.output_splitsR = (('amps', 1), ('harmonic_distribution', 120), ('noise_magnitudes', 65))
 
 # Losses
-SpectralLoss.loss_type = 'L2'
+SpectralLoss.loss_type = 'L1'
 
 # ==============
 # ProcessorGroup
