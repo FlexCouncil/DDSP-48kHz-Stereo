@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Apache Beam pipeline for computing TFRecord dataset from audio files."""
 
 from absl import logging
 import apache_beam as beam
-# from ddsp import spectral_ops
 import librosa
 import gin
 import crepe
@@ -47,65 +48,37 @@ def _load_audio_as_array(audio_path: str,
   Returns:
     audio: audio in np.float32
   """
+  # adapted for stereo
   with tf.io.gfile.GFile(audio_path, 'rb') as f:
     # Load audio at original SR
-    # audio_segment = (pydub.AudioSegment.from_file(f).set_channels(1))
-    # PYDUB
-    """audio_segment = (pydub.AudioSegment.from_file(f).set_channels(2))
-    # Compute expected length at given `sample_rate`
-    expected_len = int(audio_segment.duration_seconds * sample_rate)
-    # Resample to `sample_rate`
-    audio_segment = audio_segment.set_frame_rate(sample_rate)
-    audio = np.array(audio_segment.get_array_of_samples()).astype(np.float32)"""
-    # SCIPY
     unused_sample_rate, wav = read_audio(f)
-    print ('----wav----')
-    print (wav.shape)
-    print (wav.shape[0])
-    print (wav)
     expected_len = wav.shape[0]
-    print ('----expected_len----')
-    print (expected_len)
     # Zero pad missing samples, if any
     # audio = pad_or_trim_to_expected_length(audio, expected_len)
     audio = pad_or_trim_to_expected_length(wav, expected_len)
-  # Convert from int to float representation.
-  # audio /= 2**(8 * audio_segment.sample_width)
-  print ('----audio shape----')
-  print (audio.shape)  
   audio2 = np.copy(audio)
   audio2 = audio2 / (2**(8 * 2))
   audioM = np.squeeze(np.mean(audio2, axis=1))
   audioL = np.squeeze(audio2[:,0:1])
   audioR = np.squeeze(audio2[:,1:2])
-  print ('----audioL----')
-  print (audioL.shape)
-  print (audioL)
-  print ('----audioR----')
-  print (audioR.shape)
-  print (audioR)
-  print ('----audioM----')
-  print (audioM.shape)
-  print (audioM)
-  # return audio2
   return audioL, audioR, audioM
 
 
 def _load_audio(audio_path, sample_rate):
   """Load audio file."""
+  # adapted for stereo
   logging.info("Loading '%s'.", audio_path)
   beam.metrics.Metrics.counter('prepare-tfrecord', 'load-audio').inc()
   # audio = _load_audio_as_array(audio_path, sample_rate)
   # return {'audio': audio}
   audioL, audioR, audioM = _load_audio_as_array(audio_path, sample_rate)
   audio_dict = {'audioL': audioL, 'audioR': audioR, 'audioM': audioM}
-  print ('----audio_dict----')
-  print (audio_dict)
   return audio_dict
 
 
 def add_loudness(ex, sample_rate, frame_rate, n_fft=6144):
   """Add loudness in dB."""
+  # adapted for stereo
   beam.metrics.Metrics.counter('prepare-tfrecord', 'compute-loudness').inc()
   #STEREO
   audioM = ex['audioM']
@@ -119,33 +92,10 @@ def add_loudness(ex, sample_rate, frame_rate, n_fft=6144):
   ex['loudness_dbL'] = mean_loudness_dbL.astype(np.float32)
   ex['loudness_dbR'] = mean_loudness_dbR.astype(np.float32)
   return ex
-
- 
-'''def _add_f0_estimate(ex, sample_rate, frame_rate):
-  """Add fundamental frequency (f0) estimate using CREPE."""
-  beam.metrics.Metrics.counter('prepare-tfrecord', 'estimate-f0').inc()
-  #STEREO 
-  audioM = ex['audioM']
-  audioL = ex['audioL']
-  audioR = ex['audioR']
-  f0_hzM, f0_confidenceM = compute_f0(audioM, sample_rate, frame_rate)
-  f0_hzL, f0_confidenceL = compute_f0(audioL, sample_rate, frame_rate)
-  f0_hzR, f0_confidenceR = compute_f0(audioR, sample_rate, frame_rate)
-  ex = dict(ex)
-  ex.update({
-      'f0_hzM': f0_hzM.astype(np.float32),
-      'f0_confidenceM': f0_confidenceM.astype(np.float32),
-      'f0_hz': f0_hzM.astype(np.float32),
-      'f0_confidence': f0_confidenceM.astype(np.float32),
-      'f0_hzL': f0_hzL.astype(np.float32),
-      'f0_confidenceL': f0_confidenceL.astype(np.float32),
-      'f0_hzR': f0_hzR.astype(np.float32),
-      'f0_confidenceR': f0_confidenceR.astype(np.float32)
-  })
-  return ex'''
   
 def _add_f0_estimate(ex, sample_rate, frame_rate):
   """Add fundamental frequency (f0) estimate using CREPE."""
+  # adapted for stereo
   beam.metrics.Metrics.counter('prepare-tfrecord', 'estimate-f0').inc()
   #STEREO 
   audioM = ex['audioM']
@@ -165,71 +115,11 @@ def _add_f0_estimate(ex, sample_rate, frame_rate):
   })
   return ex
 
-
-'''def split_example(
-    ex, sample_rate, frame_rate, window_secs, hop_secs):
-  """Splits example into windows, padding final window if needed."""
-
-  def get_windows(sequence, rate):
-    window_size = int(window_secs * rate)
-    hop_size = int(hop_secs * rate)
-    n_windows = int(np.ceil((len(sequence) - window_size) / hop_size))  + 1
-    n_samples_padded = (n_windows - 1) * hop_size + window_size
-    n_padding = n_samples_padded - len(sequence)
-    sequence = np.pad(sequence, (0, n_padding), mode='constant')
-    for window_end in range(window_size, len(sequence) + 1, hop_size):
-      yield sequence[window_end-window_size:window_end]
-
-  """for audio, loudness_db, f0_hz, f0_confidence in zip(
-      get_windows(ex['audio'], sample_rate),
-      get_windows(ex['loudness_db'], frame_rate),
-      get_windows(ex['f0_hz'], frame_rate),
-      get_windows(ex['f0_confidence'], frame_rate)):
-    beam.metrics.Metrics.counter('prepare-tfrecord', 'split-example').inc()
-    yield {
-        'audio': audio,
-        'loudness_db': loudness_db,
-        'f0_hz': f0_hz,
-        'f0_confidence': f0_confidence
-    }"""
-
-  # STEREO    
-  for audioM, audioL, audioR, loudness_dbM, loudness_dbL, loudness_dbR, f0_hzM, f0_hz, f0_hzL, f0_hzR, f0_confidenceM, f0_confidence, f0_confidenceL, f0_confidenceR in zip(
-      get_windows(ex['audioM'], sample_rate),
-      get_windows(ex['audioL'], sample_rate),
-      get_windows(ex['audioR'], sample_rate),
-      get_windows(ex['loudness_dbM'], frame_rate),
-      get_windows(ex['loudness_dbL'], frame_rate),
-      get_windows(ex['loudness_dbR'], frame_rate),
-      get_windows(ex['f0_hzM'], frame_rate),
-      get_windows(ex['f0_hz'], frame_rate),
-      get_windows(ex['f0_hzL'], frame_rate),
-      get_windows(ex['f0_hzR'], frame_rate),
-      get_windows(ex['f0_confidenceM'], frame_rate),
-      get_windows(ex['f0_confidence'], frame_rate),
-      get_windows(ex['f0_confidenceL'], frame_rate),
-      get_windows(ex['f0_confidenceR'], frame_rate)):
-    beam.metrics.Metrics.counter('prepare-tfrecord', 'split-example').inc()
-    yield {
-        'audioM': audioM,
-        'audioL': audioL,
-        'audioR': audioR,
-        'loudness_dbM': loudness_dbM,
-        'loudness_dbL': loudness_dbL,
-        'loudness_dbR': loudness_dbR,
-        'f0_hzM': f0_hzM,
-        'f0_hz': f0_hz,
-        'f0_hzL': f0_hzL,
-        'f0_hzR': f0_hzR,
-        'f0_confidenceM': f0_confidenceM,
-        'f0_confidence': f0_confidence,
-        'f0_confidenceL': f0_confidenceL,
-        'f0_confidenceR': f0_confidenceR
-    }'''
     
 def split_example(
     ex, sample_rate, frame_rate, window_secs, hop_secs):
   """Splits example into windows, padding final window if needed."""
+  # adapted for stereo
 
   def get_windows(sequence, rate):
     window_size = int(window_secs * rate)
@@ -240,21 +130,7 @@ def split_example(
     sequence = np.pad(sequence, (0, n_padding), mode='constant')
     for window_end in range(window_size, len(sequence) + 1, hop_size):
       yield sequence[window_end-window_size:window_end]
-
-  """for audio, loudness_db, f0_hz, f0_confidence in zip(
-      get_windows(ex['audio'], sample_rate),
-      get_windows(ex['loudness_db'], frame_rate),
-      get_windows(ex['f0_hz'], frame_rate),
-      get_windows(ex['f0_confidence'], frame_rate)):
-    beam.metrics.Metrics.counter('prepare-tfrecord', 'split-example').inc()
-    yield {
-        'audio': audio,
-        'loudness_db': loudness_db,
-        'f0_hz': f0_hz,
-        'f0_confidence': f0_confidence
-    }"""
-
-  # STEREO    
+  
   for audioM, audioL, audioR, loudness_dbM, loudness_dbL, loudness_dbR, f0_hzM, f0_hzL, f0_hzR, f0_confidenceM, f0_confidenceL, f0_confidenceR in zip(
       get_windows(ex['audioM'], sample_rate),
       get_windows(ex['audioL'], sample_rate),
@@ -287,8 +163,6 @@ def split_example(
 
 def float_dict_to_tfexample(float_dict):
   """Convert dictionary of float arrays to tf.train.Example proto."""
-  print('---float_dict---')
-  print(float_dict)
     
   return tf.train.Example(
       features=tf.train.Features(
@@ -551,8 +425,6 @@ def pad_or_trim_to_expected_length(vector,
     `len_tolerance` to begin with.
   """
   expected_len = int(expected_len)
-  # STEREO
-  # vector_len = int(vector.shape[-1])
   vector_len = int(vector.shape[0])
 
   if abs(vector_len - expected_len) > len_tolerance:
@@ -564,13 +436,6 @@ def pad_or_trim_to_expected_length(vector,
   # Pick tensorflow or numpy.
   lib = tf if use_tf else np
 
-  # is_1d = (len(vector.shape) == 1)
-  # vector = vector[lib.newaxis, :] if is_1d else vector
-  
-  print ('---vector before padding---')
-  print (vector.shape)
-
-  # STEREO  
   # Pad missing samples
   if vector_len < expected_len:
     n_padding = expected_len - vector_len
@@ -582,22 +447,6 @@ def pad_or_trim_to_expected_length(vector,
   elif vector_len > expected_len:
     vector = vector[:expected_len, ...]
 
-  '''# Pad missing samples
-  if vector_len < expected_len:
-    n_padding = expected_len - vector_len
-    vector = lib.pad(
-        vector, ((0, 0), (0, n_padding)),
-        mode='constant',
-        constant_values=pad_value)
-  # Trim samples
-  elif vector_len > expected_len:
-    vector = vector[..., :expected_len]'''
-
-  # Remove temporary batch dimension.
-  # STEREO--uncomment line below for mono
-  # vector = vector[0] if is_1d else vector
-  print ('---vector after padding---')
-  print (vector.shape)
   return vector
   
 
