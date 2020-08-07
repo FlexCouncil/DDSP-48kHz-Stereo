@@ -12,20 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Library of loss functions."""
 
 import functools
 
 import crepe
-# from ddsp import spectral_ops
-# from ddsp.core import tf_float32
 import spectral_ops
-# import tf_float32
-
 import gin
-# import gin.config
-# from gin.config import register
 import tensorflow.compat.v2 as tf
 
 tfkl = tf.keras.layers

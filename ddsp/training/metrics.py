@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Library of performance metrics relevant to DDSP training."""
 
 from absl import logging
-# import ddsp
 import spectral_ops
 import core
 import librosa
@@ -53,21 +54,12 @@ def is_outlier(ground_truth_f0_conf):
   return np.max(ground_truth_f0_conf) < MIN_F0_CONFIDENCE
 
 
-#STEREO--SHOULD audioM BE HARDCODED FOR THIS FUNCTION?
-#DOESN'T ACTUALLY MANIPULATE AUDIO BUT DOES RETURN DICTIONARY FOR AUDIO PRIMER
-#ONLY USED FOR COLAB TIMBRE_TRANSFERnp.mean(audio2, axis=1)(audio2[:,0:1])
 def compute_audio_features(audio,
                            n_fft=6144,
                            sample_rate=48000,
                            frame_rate=250):
   """Compute features from audio."""
-  # audio_feats = {'audioM': audio}
-  # Make MONO version of audio audioM = np.mean(audio2, axis=1))
-  # audioM = np.mean(audio, axis=1)
-  """if (audio.ndim == 2):
-    audio_feats = {'audioM': audioM, 'audioL': audio[:,0:1], 'audioR': audio[:,1:2]}
-  elif (audio.ndim == 3):
-    audio_feats = {'audioM': audio}"""
+  # adapted for stereo
   audioM = np.squeeze(np.mean(audio, axis=1))
   audioL = np.squeeze(audio[:,0:1])
   audioR = np.squeeze(audio[:,1:2])
@@ -75,42 +67,9 @@ def compute_audio_features(audio,
   audioL = np.expand_dims(audioL, axis=0)
   audioR = np.expand_dims(audioR, axis=0)
   audio_feats = {'audioM': audioM, 'audioL': audioL, 'audioR': audioR}
-  # Should analysis be based only on MONO version?
-  # audio_to_analyze = squeeze(audioM)
-  print('--audio shapes after channel splittingz--')
-  print(audioM.shape)
-  print(audioL.shape)
-  print(audioR.shape)
-  print(audioL)
-  print('--audio shapes after float32--')
   audioM32 = audioM.astype(np.float32)
   audioL32 = audioL.astype(np.float32)
   audioR32 = audioR.astype(np.float32)
-  # audioM32 = audioM
-  # audioL32 = audioL
-  # audioR32 = audioR
-  print(audioM.shape)
-  print(audioL.shape)
-  print(audioR.shape)
-  print(audioL)
-
-  '''audio_feats['loudness_dbM'] = spectral_ops.compute_loudness(
-      np.squeeze(audioM32), sample_rate, frame_rate, n_fft)
-      
-  audio_feats['loudness_dbL'] = spectral_ops.compute_loudness(
-      np.squeeze(audioL32), sample_rate, frame_rate, n_fft)
-      
-  audio_feats['loudness_dbR'] = spectral_ops.compute_loudness(
-      np.squeeze(audioR32), sample_rate, frame_rate, n_fft)
-
-  audio_feats['f0_hzM'], audio_feats['f0_confidenceM'] = (
-      spectral_ops.compute_f0(np.squeeze(audioM), sample_rate, frame_rate))
-      
-  audio_feats['f0_hzL'], audio_feats['f0_confidenceL'] = (
-      spectral_ops.compute_f0(np.squeeze(audioL), sample_rate, frame_rate))
-      
-  audio_feats['f0_hzR'], audio_feats['f0_confidenceR'] = (
-      spectral_ops.compute_f0(np.squeeze(audioR), sample_rate, frame_rate))'''
       
   audio_feats['loudness_dbM'] = spectral_ops.compute_loudness(
       audioM32, sample_rate, frame_rate, n_fft)
@@ -263,68 +222,6 @@ class LoudnessMetrics(BaseMetrics):
       self.metrics['loudness_db'].update_state(ld_dist)
       log_str = f'{self._name} | sample {i} | ld_dist(db): {ld_dist:.3f}'
       logging.info(log_str)
-
-
-'''class F0CrepeMetrics(BaseMetrics):
-  """Helper object for computing CREPE-based f0 metrics.
-
-  Note that batch operations are not possible when CREPE has viterbi argument
-  set to True.
-  """
-
-  def __init__(self, sample_rate, frame_rate, name='f0_crepe'):
-    super().__init__(sample_rate=sample_rate, frame_rate=frame_rate, name=name)
-    self._metrics = {
-        'f0_dist':
-            tf.keras.metrics.Mean('f0_dist'),
-        'outlier_ratio':
-            tf.keras.metrics.Accuracy('outlier_ratio'),
-    }
-
-  @property
-  def metrics(self):
-    return self._metrics
-
-  def update_state(self, batch, audio_gen):
-    """Update metrics based on a batch of audio.
-
-    Args:
-      batch: Dictionary of input features.
-      audio_gen: Batch of generated audio.
-    """
-    batch_size = int(audio_gen.shape[0])
-    # Compute metrics per sample. No batch operations possible.
-    for i in range(batch_size):
-      # Extract f0 from generated audio example.
-      f0_hz_gen, _ = spectral_ops.compute_f0(
-          audio_gen[i],
-          sample_rate=self._sample_rate,
-          frame_rate=self._frame_rate,
-          viterbi=True)
-      f0_hz_gt = batch['f0_hz'][i]
-      f0_conf_gt = batch['f0_confidence'][i]
-
-      if is_outlier(f0_conf_gt):
-        # Ground truth f0 was unreliable to begin with. Discard.
-        f0_dist = None
-      else:
-        # Gound truth f0 was reliable, compute f0 distance with generated audio
-        f0_dist = f0_dist_conf_thresh(f0_hz_gt, f0_hz_gen, f0_conf_gt)
-        if f0_dist is None or f0_dist > OUTLIER_MIDI_THRESH:
-          # Generated audio had untrackable pitch content or is an outlier.
-          self.metrics['outlier_ratio'].update_state(True, True)
-          logging.info('sample %d has untrackable pitch content', i)
-        else:
-          # Generated audio had trackable pitch content and is within tolerance
-          self.metrics['f0_dist'].update_state(f0_dist)
-          self.metrics['outlier_ratio'].update_state(True, False)
-          log_str = f'{self._name} | sample {i} | f0_dist(midi): {f0_dist:.3f}'
-          logging.info(log_str)
-
-  def flush(self, step):
-    """Perform additional step of resetting CREPE."""
-    super().flush(step)
-    spectral_ops.reset_crepe()  # Reset CREPE global state'''
 
 
 class F0Metrics(BaseMetrics):

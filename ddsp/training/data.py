@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Library of functions to help loading data."""
 
@@ -208,6 +210,7 @@ class RecordProvider(DataProvider):
   @property
   def features_dict(self):
     """Dictionary of features to read from dataset."""
+    # adapted for stereo
     return {
         'audioM':
             tf.io.FixedLenFeature([self._audio_length], dtype=tf.float32),
@@ -234,53 +237,6 @@ class RecordProvider(DataProvider):
         'loudness_dbR':
             tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
     }
-    
-  '''def features_dict(self):
-    """Dictionary of features to read from dataset."""
-    return {
-        'audioM':
-            tf.io.FixedLenFeature([self._audio_length], dtype=tf.float32),
-        'audioL':
-            tf.io.FixedLenFeature([self._audio_length], dtype=tf.float32),
-        'audioR':
-            tf.io.FixedLenFeature([self._audio_length], dtype=tf.float32),
-        'f0_hzM':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-        'f0_hz':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-        'f0_hzL':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-        'f0_hzR':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-        'f0_confidenceM':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-        'f0_confidence':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-        'f0_confidenceL':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-        'f0_confidenceR':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-        'loudness_dbM':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-        'loudness_dbL':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-        'loudness_dbR':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-    }'''
-    
-
-  '''def features_dict(self):
-    """Dictionary of features to read from dataset."""
-    return {
-        'audio':
-            tf.io.FixedLenFeature([self._audio_length], dtype=tf.float32),
-        'f0_hz':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-        'f0_confidence':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-        'loudness_db':
-            tf.io.FixedLenFeature([self._feature_length], dtype=tf.float32),
-    }'''
 
 
 @gin.register

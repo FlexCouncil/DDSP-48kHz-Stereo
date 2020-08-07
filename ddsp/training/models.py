@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Model that outputs coefficeints of an additive synthesizer."""
 
@@ -20,15 +22,12 @@ import time
 from typing import Dict, Sequence, Tuple, Text
 
 from absl import logging
-# import ddsp
-# from ddsp.training import train_util
 import core
 import losses
 import processors
 import synths
 import effects
 from training import train_util
-# import train_util
 import gin
 import tensorflow.compat.v2 as tf
 
@@ -95,6 +94,7 @@ class Model(tf.keras.Model):
 @gin.configurable
 class Autoencoder(Model):
   """Wrap the model function for dependency injection with gin."""
+  # adapted for stereo
 
   def __init__(self,
                preprocessor=None,
@@ -114,24 +114,7 @@ class Autoencoder(Model):
     self.processor_groupL = processor_groupL
     self.processor_groupR = processor_groupR
     self.loss_objs = core.make_iterable(losses)
-    
-  '''def __init__(self,
-               preprocessor=None,
-               encoder=None,
-               decoder=None,
-               processor_groupM=processors.ProcessorGroup(dag=[(synths.Additive(), ['amps', 'harmonic_distribution', 'f0_hzM']), (synths.FilteredNoise(), ['noise_magnitudes']), (processors.Add(), ['filtered_noise/signal', 'additive/signal']), (effects.Reverb(), ['add/signal']),]),
-               processor_groupL=processors.ProcessorGroup(dag=[(synths.Additive(), ['amps', 'harmonic_distribution', 'f0_hzL']), (synths.FilteredNoise(), ['noise_magnitudes']), (processors.Add(), ['filtered_noise/signal', 'additive/signal']), (effects.Reverb(), ['add/signal']),]),
-               processor_groupR=processors.ProcessorGroup(dag=[(synths.Additive(), ['amps', 'harmonic_distribution', 'f0_hzR']), (synths.FilteredNoise(), ['noise_magnitudes']), (processors.Add(), ['filtered_noise/signal', 'additive/signal']), (effects.Reverb(), ['add/signal']),]),
-               losses=losses.SpectralLoss(),
-               name='autoencoder'):
-    super().__init__(name=name)
-    self.preprocessor = preprocessor
-    self.encoder = encoder
-    self.decoder = decoder
-    self.processor_groupM = processor_groupM
-    self.processor_groupL = processor_groupL
-    self.processor_groupR = processor_groupR
-    self.loss_objs = core.make_iterable(losses)'''
+       
 
   def controls_to_audio(self, controls):
     return controls[self.processor_group.name]['signal']
@@ -139,20 +122,14 @@ class Autoencoder(Model):
   def encode(self, features, training=True):
     """Get conditioning by preprocessing then encoding."""
     conditioning = self.preprocessor(features, training=training)
-    print('---conditioning(encoder)---')
-    print(conditioning)
     return conditioning if self.encoder is None else self.encoder(conditioning)
 
   def decode(self, conditioning, training=True):
     """Get generated audio by decoding than processing."""
-    print('---returned from decoder---')
-    # processor_inputsM, processor_inputsL, processor_inputsR = self.decoder(conditioning, training=training)
-    # return self.processor_groupM(processor_inputsM), self.processor_groupL(processor_inputsL), self.processor_groupR(processor_inputsR)
+    # adapted for stereo
     processor_inputsM = self.decoder(conditioning, mode='mono', training=training)
     processor_inputsL = self.decoder(conditioning, mode='left', training=training)
     processor_inputsR = self.decoder(conditioning, mode='right', training=training)
-    print('---processor input dict---')
-    print(processor_inputsM)
     processedM = self.processor_groupM(processor_inputsM)
     processedL = self.processor_groupL(processor_inputsL)
     processedR = self.processor_groupR(processor_inputsR)
@@ -160,6 +137,7 @@ class Autoencoder(Model):
     
   def call(self, features, training=True):
     """Run the core of the network, get predictions and loss."""
+    # adapted for stereo
     conditioning = self.encode(features, training=training)
     audio_genM, audio_genL, audio_genR = self.decode(conditioning, training=training)
     if training:
@@ -167,8 +145,6 @@ class Autoencoder(Model):
         lossM = loss_obj(features['audioM'], audio_genM)
         lossL = loss_obj(features['audioL'], audio_genL)
         lossR = loss_obj(features['audioR'], audio_genR)
-        # loss = tf.math.add(lossL, lossR)
-        # self._losses_dict[loss_obj.name] = loss
         self._losses_dict['spectral_loss_mono'] = lossM
         self._losses_dict['spectral_loss_left'] = lossL
         self._losses_dict['spectral_loss_right'] = lossR

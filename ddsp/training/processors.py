@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Library of base Processor and ProcessorGroup.
 
@@ -102,8 +104,6 @@ class ProcessorGroup(tfkl.Layer):
 
   def call(self, dag_inputs: TensorDict) -> tf.Tensor:
     """Like Processor, but specific to having an input dictionary."""
-    print('---dag_inputs---')
-    print(dag_inputs)
     dag_inputs = core.copy_if_tf_function(dag_inputs)
     dag_outputs = self.get_controls(dag_inputs)
     signal = self.get_signal(dag_outputs)

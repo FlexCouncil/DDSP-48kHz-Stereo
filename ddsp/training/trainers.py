@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Library of Trainer objects that define traning step and wrap optimizer."""
 
 import time
 
 from absl import logging
-# from ddsp.training import train_util
 from training import train_util
 import gin
 import tensorflow.compat.v2 as tf
@@ -147,7 +148,6 @@ class Trainer(object):
     """Distributed training step."""
     # Wrap iterator in tf.function, slight speedup passing in iter vs batch.
     batch = next(inputs) if hasattr(inputs, '__next__') else inputs
-    # losses = self.run(self.step_fn, batch)
     losses = self.run(self.step_fn, batch)
     # Add up the scalar losses across replicas.
     n_replicas = self.strategy.num_replicas_in_sync
@@ -159,9 +159,6 @@ class Trainer(object):
     with tf.GradientTape(persistent=True) as tape:
       _, losses = self.model(batch, return_losses=True, training=True)
     # Clip and apply gradients.
-    print ('---trainable_variables---')
-    print (self.model.trainable_variables)
-    # print (self.model.trainable_variables[0].name)
     tvars = self.model.trainable_variables
     m_vars1 = [var for var in tvars if '/normalize/' in var.name]
     m_vars2 = [var for var in tvars if '/gru_cell/' in var.name]
@@ -193,9 +190,6 @@ class Trainer(object):
     r_vars8 = [var for var in tvars if '/fc_stack_11/' in var.name]
     r_vars9 = [var for var in tvars if 'processor_group_2/' in var.name]
     r_vars10 = [var for var in tvars if '/rnn_fc_decoder/dense_2/' in var.name]
-    print ('---trainable_variables_sorted---')
-    # print (m_vars)
-    # grads = tape.gradient(losses['total_loss'], self.model.trainable_variables)
     gradsM1 = tape.gradient(losses['spectral_loss_mono'], m_vars1)
     gradsM2 = tape.gradient(losses['spectral_loss_mono'], m_vars2)
     gradsM3 = tape.gradient(losses['spectral_loss_mono'], m_vars3)
@@ -226,7 +220,6 @@ class Trainer(object):
     gradsR8 = tape.gradient(losses['spectral_loss_right'], r_vars8)
     gradsR9 = tape.gradient(losses['spectral_loss_right'], r_vars9)
     gradsR10 = tape.gradient(losses['spectral_loss_right'], r_vars10)
-    # grads, _ = tf.clip_by_global_norm(grads, self.grad_clip_norm)
     gradsM1, _ = tf.clip_by_global_norm(gradsM1, self.grad_clip_norm)
     gradsM2, _ = tf.clip_by_global_norm(gradsM2, self.grad_clip_norm)
     gradsM3, _ = tf.clip_by_global_norm(gradsM3, self.grad_clip_norm)
@@ -257,7 +250,6 @@ class Trainer(object):
     gradsR8, _ = tf.clip_by_global_norm(gradsR8, self.grad_clip_norm)
     gradsR9, _ = tf.clip_by_global_norm(gradsR9, self.grad_clip_norm)
     gradsR10, _ = tf.clip_by_global_norm(gradsR10, self.grad_clip_norm)
-    # self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
     self.optimizer.apply_gradients(zip(gradsM1, m_vars1))
     self.optimizer.apply_gradients(zip(gradsM2, m_vars2))
     self.optimizer.apply_gradients(zip(gradsM3, m_vars3))

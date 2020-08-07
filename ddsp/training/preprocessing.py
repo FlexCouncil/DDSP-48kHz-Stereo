@@ -15,7 +15,6 @@
 # Lint as: python3
 """Library of preprocess functions."""
 
-# import ddsp
 import spectral_ops
 import core
 import gin
@@ -59,6 +58,7 @@ class Preprocessor(object):
 @gin.register
 class DefaultPreprocessor(Preprocessor):
   """Default class that resamples features and adds `f0_hz` key."""
+  # adapted for stereo
 
   def __init__(self, time_steps=1000):
     super().__init__()

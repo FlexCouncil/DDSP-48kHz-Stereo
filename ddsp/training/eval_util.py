@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Library of evaluation functions."""
 
@@ -19,8 +21,6 @@ import os
 import time
 
 from absl import logging
-# from ddsp.training import metrics
-# from ddsp.training import summaries
 from training import metrics
 from training import summaries
 import gin

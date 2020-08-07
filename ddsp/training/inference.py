@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Constructs inference version of the models.
 
@@ -19,7 +21,6 @@ These models can be stored as SavedModels by calling model.save() and used
 just like other SavedModels.
 """
 
-# from ddsp.training import models
 from training import models
 import tensorflow.compat.v2 as tf
 

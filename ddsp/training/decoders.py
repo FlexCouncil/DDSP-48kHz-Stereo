@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Library of encoder objects."""
 
-# from ddsp import core
-# from ddsp.training import nn
 import core
 from training import nn
 import gin
@@ -32,6 +32,7 @@ class Decoder(tfkl.Layer):
   Users should override decode() to define the actual encoder structure.
   Hyper-parameters will be passed through the constructor.
   """
+  # adapted for stereo
 
   def __init__(self,
                output_splitsM=(('amps', 1), ('harmonic_distribution', 120), ('noise_magnitudes', 65)),
@@ -76,24 +77,7 @@ class Decoder(tfkl.Layer):
 @gin.register
 class RnnFcDecoder(Decoder):
   """RNN and FC stacks for f0 and loudness."""
-
-  '''def __init__(self,
-               rnn_channels=512,
-               rnn_type='gru',
-               ch=512,
-               layers_per_stack=3,
-               input_keysM=('ld_scaledM', 'f0_scaledM', 'zM'),
-               input_keysL=('ld_scaledL', 'f0_scaledL', 'zL'),
-               input_keysR=('ld_scaledR', 'f0_scaledR', 'zR'),
-               output_splitsM=(('amps', 1), ('harmonic_distribution', 120), ('noise_magnitudes', 65)),
-               output_splitsL=(('amps', 1), ('harmonic_distribution', 120), ('noise_magnitudes', 65)),
-               output_splitsR=(('amps', 1), ('harmonic_distribution', 120), ('noise_magnitudes', 65)),
-               name=None):
-    super().__init__(output_splitsM=output_splitsM, output_splitsL=output_splitsL, output_splitsR=output_splitsR, name=name)
-    stack = lambda: nn.fc_stack(ch, layers_per_stack)
-    self.input_keysM = input_keysM
-    self.input_keysL = input_keysL
-    self.input_keysR = input_keysR'''
+  # adapted for stereo
     
   def __init__(self,
                rnn_channels=512,
@@ -129,13 +113,6 @@ class RnnFcDecoder(Decoder):
     self.dense_outM = nn.dense(self.n_outM)
     self.dense_outL = nn.dense(self.n_outL)
     self.dense_outR = nn.dense(self.n_outR)
-    print('---dense_out---')
-    print(self.dense_outM)
-    print(self.dense_outL)
-    print(self.dense_outR)
-    print(self.dense_outM.name)
-    print(self.dense_outL.name)
-    print(self.dense_outR.name)
 
     # Backwards compatability.
     self.f_stack = self.input_stacksM[0] if len(self.input_stacksM) >= 1 else None
@@ -152,10 +129,6 @@ class RnnFcDecoder(Decoder):
 
   def decode(self, conditioning, mode):
     # Initial processing.
-    print ('---conditioning(decoder)---')
-    print (conditioning)
-    print ('---input_keysM(decoder)---')
-    print (self.input_keysM)
     inputsM = [conditioning[k] for k in self.input_keysM]
     inputsL = [conditioning[k] for k in self.input_keysL]
     inputsR = [conditioning[k] for k in self.input_keysR]
@@ -183,8 +156,6 @@ class RnnFcDecoder(Decoder):
     dM = self.dense_outM(xM)
     dL = self.dense_outL(xL)
     dR = self.dense_outR(xR)
-    print('---dL--')
-    print(dL)
     
     if (mode == 'mono'):
       return dM

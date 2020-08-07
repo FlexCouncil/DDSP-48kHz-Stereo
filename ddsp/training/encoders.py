@@ -12,15 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Library of encoder objects."""
 
-# import ddsp
-# from ddsp import spectral_ops
-# from ddsp.training import nn
-# import ddsp
 import spectral_ops
-# import core
 from training import nn
 import gin
 import numpy as np
@@ -49,6 +46,7 @@ class Encoder(tfkl.Layer):
 
   def call(self, conditioning):
     """Updates conditioning with z and (optionally) f0."""
+    # adapted for stereo
     if self.f0_encoder:
       # Use frequency conditioning created by the f0_encoder, not the dataset.
       # Overwrite `f0_scaled` and `f0_hz`. 'f0_scaled' is a value in [0, 1]
@@ -64,8 +62,6 @@ class Encoder(tfkl.Layer):
     conditioning['zM'] = self.expand_z(zM, time_steps)
     conditioning['zL'] = self.expand_z(zL, time_steps)
     conditioning['zR'] = self.expand_z(zR, time_steps)
-    print('---conditioning dict---')
-    print(conditioning)
 
     return conditioning
 
@@ -82,13 +78,13 @@ class Encoder(tfkl.Layer):
 
   def compute_z(self, conditioning):
     """Takes in conditioning dictionary, returns a latent tensor z."""
-    print('---compute_z called base class---')
     raise NotImplementedError
 
 
 @gin.register
 class MfccTimeDistributedRnnEncoder(Encoder):
   """Use MFCCs as latent variables, distribute across timesteps."""
+  # adapted for stereo
 
   def __init__(self,
                rnn_channels=512,
@@ -138,8 +134,7 @@ class MfccTimeDistributedRnnEncoder(Encoder):
     self.dense_outR = nn.dense(z_dims)
 
   def compute_z(self, conditioning):
-    #MONO
-    print('---compute_z called child class---')    
+    #mono
     mfccsM = spectral_ops.compute_mfcc(
         conditioning['audioM'],
         lo_hz=20.0,
@@ -150,7 +145,7 @@ class MfccTimeDistributedRnnEncoder(Encoder):
         overlap=self.overlap,
         pad_end=True)
         
-    #LEFT  
+    #left 
     mfccsL = spectral_ops.compute_mfcc(
         conditioning['audioL'],
         lo_hz=20.0,
@@ -161,7 +156,7 @@ class MfccTimeDistributedRnnEncoder(Encoder):
         overlap=self.overlap,
         pad_end=True)
         
-    #RIGHT
+    #right
     mfccsR = spectral_ops.compute_mfcc(
         conditioning['audioR'],
         lo_hz=20.0,
@@ -172,7 +167,7 @@ class MfccTimeDistributedRnnEncoder(Encoder):
         overlap=self.overlap,
         pad_end=True)
 
-    #MONO
+    #mono
     # Normalize.
     zM = self.z_normM(mfccsM[:, :, tf.newaxis, :])[:, :, 0, :]
     # Run an RNN over the latents.
@@ -180,7 +175,7 @@ class MfccTimeDistributedRnnEncoder(Encoder):
     # Bounce down to compressed z dimensions.
     zM = self.dense_outM(zM)
     
-    #LEFT
+    #left
     # Normalize.
     zL = self.z_normL(mfccsL[:, :, tf.newaxis, :])[:, :, 0, :]
     # Run an RNN over the latents.
@@ -188,7 +183,7 @@ class MfccTimeDistributedRnnEncoder(Encoder):
     # Bounce down to compressed z dimensions.
     zL = self.dense_outL(zL)
     
-    #RIGHT
+    #right
     # Normalize.
     zR = self.z_normR(mfccsR[:, :, tf.newaxis, :])[:, :, 0, :]
     # Run an RNN over the latents.
@@ -225,6 +220,7 @@ class F0Encoder(tfkl.Layer):
 @gin.register
 class ResnetF0Encoder(F0Encoder):
   """Embeddings from resnet on spectrograms."""
+  # adapted for stereo
 
   def __init__(self,
                size='large',
