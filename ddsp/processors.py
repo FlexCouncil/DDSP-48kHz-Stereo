@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Library of base Processor and ProcessorGroup.
 
@@ -23,7 +25,6 @@ programmatically specified via external dependency injection, such as with the
 
 from typing import Dict, Sequence, Tuple, Text
 
-# from ddsp import core
 import core
 import synths
 import effects
@@ -121,8 +122,6 @@ class ProcessorGroup(tfkl.Layer):
     Returns:
       A nested dictionary of all the output tensors.
     """
-    print('---dag_inputs--')
-    print(dag_inputs)
     # Also build layer on get_controls(), instead of just __call__().
     self.built = True
 
@@ -133,14 +132,9 @@ class ProcessorGroup(tfkl.Layer):
     for node in self.dag:
       # Get the node processor and keys to the node input.
       processor, keys = node
-      print('---indiv processor & keys---')
-      print(processor)
-      print(keys)
 
       # Get the inputs to the node.
       inputs = [core.nested_lookup(key, outputs) for key in keys]
-      print('---indiv processor inputs---')
-      print(inputs)
 
       # Build the processor only if called the first time in a @tf.function.
       # Need to explicitly build because we use get_controls() and get_signal()

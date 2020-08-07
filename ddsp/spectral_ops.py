@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This file has been modified from the original
+
 # Lint as: python3
 """Library of FFT operations for loss functions and conditioning."""
 
 import crepe
-# from ddsp.core import tf_float32
 import gin
-# import gin.config as gin
 import librosa
 import numpy as np
 import tensorflow.compat.v2 as tf
