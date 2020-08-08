@@ -495,6 +495,7 @@ def fit_quantile_transform(loudness_db, mask_on, inv_quantile=None):
   else:
     loudness_flat_norm = inv_quantile.inverse_transform(loudness_flat_q)
     loudness_norm = np.ravel(loudness_db.copy())[:, np.newaxis]
+    mask_on = np.squeeze(mask_on)
     loudness_norm[mask_on] = loudness_flat_norm
     return quantile_transform, loudness_norm
 
@@ -567,14 +568,7 @@ def save_dataset_statistics(data_provider, file_path, batch_size=128):
   quantile_transformL = fit_quantile_transform(l_trimmedL, mask_onL)
   quantile_transformR = fit_quantile_transform(l_trimmedR, mask_onR)
 
-  # Average pitch.
-  print('---Average pitch f0_trimmedL---')
-  print(f0_trimmedL)
-  print(f0_trimmedL.shape)
-  print('---Average pitch f0_trimmedL[mask_onL]---')
-  print(f0_trimmedL[mask_onL])
-  print(f0_trimmedL[mask_onL].shape)
-  
+  # Average pitch.  
   mean_pitchM = np.mean(hz_to_midi(f0_trimmedM[mask_onM]))
   mean_pitchL = np.mean(hz_to_midi(f0_trimmedL[mask_onL]))
   mean_pitchR = np.mean(hz_to_midi(f0_trimmedR[mask_onR]))
