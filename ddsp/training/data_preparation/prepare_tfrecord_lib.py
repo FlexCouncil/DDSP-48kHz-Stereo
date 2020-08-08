@@ -388,7 +388,6 @@ def compute_f0(audio, sample_rate, frame_rate, viterbi=True):
   f0_hz = f0_hz.astype(np.float32)
 
   # Postprocessing on f0_confidence
-  # STEREO?
   f0_confidence = pad_or_trim_to_expected_length_mono(f0_confidence, expected_len, 1)
   # f0_confidence = pad_or_trim_to_expected_length(f0_confidence, expected_len, 2)
   f0_confidence = np.nan_to_num(f0_confidence)   # Set nans to 0 in confidence
