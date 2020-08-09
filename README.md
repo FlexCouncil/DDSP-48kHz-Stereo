@@ -44,7 +44,7 @@ audio = additive(outputs['amplitudes'],
 * [Check out the blog post 💻](https://magenta.tensorflow.org/ddsp)
 * [Read the original paper 📄](https://arxiv.org/abs/2001.04643)
 * [Listen to some examples 🔈](https://goo.gl/magenta/ddsp-examples)
-* [Try out the timbre transfer demo 🎤->🎻](./ddsp/colab/demos/timbre_transfer.ipynb)
+* [Try out the timbre transfer demo 🎤->🎻](./ddsp/colab/demos/ddsp_train_and_timbre_transfer_48kHz_stereo.ipynb)
 
 
 <a id='Tutorials'></a>
