@@ -6,5 +6,5 @@ Interactive notebooks to demonstrate DDSP.
 
 * [tutorials](./tutorials/): Interactive walkthroughs of the DDSP functions and APIs.
 
-* [48kHz/Stereo version](https://colab.research.google.com/github/DemonFlexCouncil/DDSP-48kHz-Stereo/blob/master/ddsp/colab/timbre_transfer_48stereo.ipynb)
+* [48kHz/Stereo version](https://colab.research.google.com/github/DemonFlexCouncil/DDSP-48kHz-Stereo/blob/master/ddsp/colab/ddsp_train_and_timbre_transfer_48kHz_stereo.ipynb)
 
