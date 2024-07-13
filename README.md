@@ -11,7 +11,7 @@
 | [**Overview**](#Overview)
 | [**Installation**](#Installation)
 
-Please note that this version of DDSP has been altered from the original. The sample rate is now 48kHz (was 16kHz) and it is stereo (was mono.) I also introduced a variable render length so you can feed it a loop or phrase. I left all the original README information in place because it is general and applies to this version as well. You can try out my modifications in this [Colaboratory Demo](https://colab.research.google.com/github/DemonFlexCouncil/DDSP-48kHz-Stereo/blob/master/ddsp/colab/ddsp_train_and_timbre_transfer_48kHz_stereo.ipynb).
+Please note that this version of DDSP has been altered from the original. The sample rate is now 48kHz (was 16kHz) and it is stereo (was mono.) I also introduced a variable render length so you can feed it a loop or phrase. I left all the original README information in place because it is general and applies to this version as well. You can try out my modifications in this [Colaboratory Demo](https://colab.research.google.com/github/FlexCouncil/DDSP-48kHz-Stereo/blob/master/ddsp/colab/ddsp_48kHz_stereo1.ipynb).
 
 ---
 
