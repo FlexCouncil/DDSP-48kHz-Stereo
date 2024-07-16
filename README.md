@@ -2,7 +2,7 @@
 <img src="https://storage.googleapis.com/ddsp/github_images/ddsp_logo.png" width="200px" alt="logo"></img>
 </div>
 
-# DDSP: Differentiable Digital Signal Processing--48kHz Stereo
+# DDSP: Differentiable Digital Signal Processing--48 kHz/Stereo
 [![Build Status](https://github.com/magenta/ddsp/workflows/build/badge.svg)](https://github.com/magenta/ddsp/actions?query=workflow%3Abuild)
 
 [**Demos**](./ddsp/colab/demos)
@@ -11,7 +11,7 @@
 | [**Overview**](#Overview)
 | [**Installation**](#Installation)
 
-Please note that this version of DDSP has been altered from the original. The sample rate is now 48kHz (was 16kHz) and it is stereo (was mono.) I also introduced a variable render length so you can feed it a loop or phrase. I left all the original README information in place because it is general and applies to this version as well. You can try out my modifications in this [Colaboratory Demo](https://colab.research.google.com/github/FlexCouncil/DDSP-48kHz-Stereo/blob/master/ddsp/colab/ddsp_48kHz_stereo1.ipynb).
+Please note that this version of DDSP has been altered from the original. The sample rate is now 48 kHz (was 16 kHz) and it is stereo (was mono.) I also introduced a variable render length so you can feed it a loop or phrase. I left all the original README information in place because it is general and applies to this version as well. You can try out my modifications in this [Colaboratory Demo](https://colab.research.google.com/github/FlexCouncil/DDSP-48kHz-Stereo/blob/master/ddsp/colab/ddsp_48kHz_stereo1.ipynb).
 
 ---
 
