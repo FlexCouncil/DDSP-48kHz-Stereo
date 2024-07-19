@@ -49,13 +49,13 @@ def _load_audio_as_array(audio_path: str,
     audio: audio in np.float32
   """
   # adapted for stereo
-  with tf.io.gfile.GFile(audio_path, 'rb') as f:
+  # with tf.io.gfile.GFile(audio_path, 'rb') as f:
     # Load audio at original SR
-    unused_sample_rate, wav = read_audio(f)
-    expected_len = wav.shape[0]
+  unused_sample_rate, wav = read_audio(f)
+  expected_len = wav.shape[0]
     # Zero pad missing samples, if any
     # audio = pad_or_trim_to_expected_length(audio, expected_len)
-    audio = pad_or_trim_to_expected_length(wav, expected_len)
+  audio = pad_or_trim_to_expected_length(wav, expected_len)
   audio2 = np.copy(audio)
   audio2 = audio2 / (2**(8 * 2))
   audioM = np.squeeze(np.mean(audio2, axis=1))
