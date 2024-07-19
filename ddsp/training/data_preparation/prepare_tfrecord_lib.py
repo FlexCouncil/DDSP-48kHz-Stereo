@@ -50,8 +50,9 @@ def _load_audio_as_array(audio_path: str,
   """
   # adapted for stereo
   # with tf.io.gfile.GFile(audio_path, 'rb') as f:
+  # with open(audio_path, 'rb') as f:
     # Load audio at original SR
-  unused_sample_rate, wav = read_audio(f)
+  unused_sample_rate, wav = read_audio(audio_path)
   expected_len = wav.shape[0]
     # Zero pad missing samples, if any
     # audio = pad_or_trim_to_expected_length(audio, expected_len)
