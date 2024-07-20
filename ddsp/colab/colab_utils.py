@@ -536,20 +536,35 @@ def save_dataset_statistics(data_provider, file_path, batch_size=128):
     audioR.append(batch['audioR'])
     # i += 1
     # print('batch: {}'.format(i))
+    
+  print("Data collected:")
+  for key, value in {'loudnessM': loudnessM, 'loudnessL': loudnessL, 'loudnessR': loudnessR, 'f0M': f0M, 'f0L': f0L, 'f0R': f0R, 'f0_confM': f0_confM, 'f0_confL': f0_confL, 'f0_confR': f0_confR, 'audioM': audioM, 'audioL': audioL, 'audioR': audioR}.items():
+    print(f"{key}: {len(value)} batches, types: {[type(x) for x in value[:3]]}")
+    if len(value) > 0:
+      print(f"    First batch shape: {value[0].shape}")
+      
+  try:
 
-  loudnessM = np.vstack(loudnessM)
-  loudnessL = np.vstack(loudnessL)
-  loudnessR = np.vstack(loudnessR)
-  f0M = np.vstack(f0M)
-  f0L = np.vstack(f0L)
-  f0R = np.vstack(f0R)
-  f0_confM = np.vstack(f0_confM)
-  f0_confL = np.vstack(f0_confL)
-  f0_confR = np.vstack(f0_confR)
-  audioM = np.vstack(audioM)
-  audioL = np.vstack(audioL)
-  audioR = np.vstack(audioR)
+    loudnessM = np.vstack(loudnessM)
+    loudnessL = np.vstack(loudnessL)
+    loudnessR = np.vstack(loudnessR)
+    f0M = np.vstack(f0M)
+    f0L = np.vstack(f0L)
+    f0R = np.vstack(f0R)
+    f0_confM = np.vstack(f0_confM)
+    f0_confL = np.vstack(f0_confL)
+    f0_confR = np.vstack(f0_confR)
+    audioM = np.vstack(audioM)
+    audioL = np.vstack(audioL)
+    audioR = np.vstack(audioR)
 
+  except ValueError as e:
+    print(f"Error during concatenation: {e}")
+    print("Shapes of arrays:")
+    for key, value in {'loudnessM': loudnessM, 'loudnessL': loudnessL, 'loudnessR': loudnessR, 'f0M': f0M, 'f0L': f0L, 'f0R': f0R, 'f0_confM': f0_confM, 'f0_confL': f0_confL, 'f0_confR': f0_confR, 'audioM': audioM, 'audioL': audioL, 'audioR': audioR}.items():
+    print(f"{key}: {[x.shape for x in value]}")
+    raise
+    
   # Fit the transform.
   trim_end = 20
   f0_trimmedM = f0M[:, :-trim_end]
