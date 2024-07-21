@@ -88,7 +88,8 @@ from __future__ import division
 from __future__ import print_function
 
 
-import collections
+# import collections
+import collections.abc as collections
 import contextlib
 import copy
 import enum
