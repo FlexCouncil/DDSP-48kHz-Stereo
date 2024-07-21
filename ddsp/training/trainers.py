@@ -64,7 +64,8 @@ class Trainer(object):
         decay_rate=lr_decay_rate)
 
     with self.strategy.scope():
-      optimizer = tf.keras.optimizers.Adam(lr_schedule)
+      # optimizer = tf.keras.optimizers.Adam(lr_schedule)
+      optimizer = tf.keras.optimizers.legacy.Adam(lr_schedule)
       self.optimizer = optimizer
 
   def save(self, save_dir):
