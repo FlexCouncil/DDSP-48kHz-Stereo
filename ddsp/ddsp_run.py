@@ -75,6 +75,20 @@ from training import trainers
 import pkg_resources
 import tensorflow.compat.v2 as tf
 
+import collections
+import collections.abc
+
+collections.Mapping = collections.abc.Mapping
+collections.MutableMapping = collections.abc.MutableMapping
+collections.Iterable = collections.abc.Iterable
+collections.MutableSet = collections.abc.MutableSet
+collections.Set = collections.abc.Set
+collections.Sequence = collections.abc.Sequence
+collections.MutableSequence = collections.abc.MutableSequence
+collections.ValuesView = collections.abc.ValuesView
+collections.KeysView = collections.abc.KeysView
+collections.ItemsView = collections.abc.ItemsView
+
 FLAGS = flags.FLAGS
 
 # Program flags.
@@ -179,6 +193,8 @@ def main(unused_argv):
       model = models.get_model()
       trainer = trainers.Trainer(model, strategy)
 
+    print("GIN CONFIGURATION STRING:")
+    print(gin.config_str())
     train_util.train(data_provider=gin.REQUIRED,
                      trainer=trainer,
                      save_dir=save_dir,
