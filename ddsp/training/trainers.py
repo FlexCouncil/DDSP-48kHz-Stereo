@@ -67,6 +67,7 @@ class Trainer(object):
       # optimizer = tf.keras.optimizers.Adam(lr_schedule)
       optimizer = tf.keras.optimizers.legacy.Adam(lr_schedule)
       self.optimizer = optimizer
+      # optimizer.build(model.trainable_variables)
 
   def save(self, save_dir):
     """Saves model and optimizer to a checkpoint."""
@@ -156,131 +157,19 @@ class Trainer(object):
 
   @tf.function
   def step_fn(self, batch):
-    """Per-Replica training step."""
-    with tf.GradientTape(persistent=True) as tape:
+    with tf.GradientTape() as tape:
       _, losses = self.model(batch, return_losses=True, training=True)
-    # Clip and apply gradients.
-    tvars = self.model.trainable_variables
-    m_vars1 = [var for var in tvars if '/normalize/' in var.name]
-    m_vars2 = [var for var in tvars if '/gru_cell/' in var.name]
-    m_vars3 = [var for var in tvars if '/gru_cell_3/' in var.name]
-    m_vars4 = [var for var in tvars if 'rnn_encoder/dense/' in var.name]
-    m_vars5 = [var for var in tvars if '/fc_stack/' in var.name]
-    m_vars6 = [var for var in tvars if '/fc_stack_1/' in var.name]
-    m_vars7 = [var for var in tvars if '/fc_stack_2/' in var.name]
-    m_vars8 = [var for var in tvars if '/fc_stack_9/' in var.name]
-    m_vars9 = [var for var in tvars if 'processor_group/' in var.name]
-    m_vars10 = [var for var in tvars if 'rnn_fc_decoder/dense/' in var.name]
-    l_vars1 = [var for var in tvars if '/normalize_1/' in var.name]
-    l_vars2 = [var for var in tvars if '/gru_cell_1/' in var.name]
-    l_vars3 = [var for var in tvars if '/gru_cell_4/' in var.name]
-    l_vars4 = [var for var in tvars if 'rnn_encoder/dense_1/' in var.name]
-    l_vars5 = [var for var in tvars if '/fc_stack_3/' in var.name]
-    l_vars6 = [var for var in tvars if '/fc_stack_4/' in var.name]
-    l_vars7 = [var for var in tvars if '/fc_stack_5/' in var.name]
-    l_vars8 = [var for var in tvars if '/fc_stack_10/' in var.name]
-    l_vars9 = [var for var in tvars if 'processor_group_1/' in var.name]
-    l_vars10 = [var for var in tvars if '/rnn_fc_decoder/dense_1/' in var.name]
-    r_vars1 = [var for var in tvars if '/normalize_2/' in var.name]
-    r_vars2 = [var for var in tvars if '/gru_cell_2/' in var.name]
-    r_vars3 = [var for var in tvars if '/gru_cell_5/' in var.name]
-    r_vars4 = [var for var in tvars if 'rnn_encoder/dense_2/' in var.name]
-    r_vars5 = [var for var in tvars if '/fc_stack_6/' in var.name]
-    r_vars6 = [var for var in tvars if '/fc_stack_7/' in var.name]
-    r_vars7 = [var for var in tvars if '/fc_stack_8/' in var.name]
-    r_vars8 = [var for var in tvars if '/fc_stack_11/' in var.name]
-    r_vars9 = [var for var in tvars if 'processor_group_2/' in var.name]
-    r_vars10 = [var for var in tvars if '/rnn_fc_decoder/dense_2/' in var.name]
-    gradsM1 = tape.gradient(losses['spectral_loss_mono'], m_vars1)
-    gradsM2 = tape.gradient(losses['spectral_loss_mono'], m_vars2)
-    gradsM3 = tape.gradient(losses['spectral_loss_mono'], m_vars3)
-    gradsM4 = tape.gradient(losses['spectral_loss_mono'], m_vars4)
-    gradsM5 = tape.gradient(losses['spectral_loss_mono'], m_vars5)
-    gradsM6 = tape.gradient(losses['spectral_loss_mono'], m_vars6)
-    gradsM7 = tape.gradient(losses['spectral_loss_mono'], m_vars7)
-    gradsM8 = tape.gradient(losses['spectral_loss_mono'], m_vars8)
-    gradsM9 = tape.gradient(losses['spectral_loss_mono'], m_vars9)
-    gradsM10 = tape.gradient(losses['spectral_loss_mono'], m_vars10)
-    gradsL1 = tape.gradient(losses['spectral_loss_left'], l_vars1)
-    gradsL2 = tape.gradient(losses['spectral_loss_left'], l_vars2)
-    gradsL3 = tape.gradient(losses['spectral_loss_left'], l_vars3)
-    gradsL4 = tape.gradient(losses['spectral_loss_left'], l_vars4)
-    gradsL5 = tape.gradient(losses['spectral_loss_left'], l_vars5)
-    gradsL6 = tape.gradient(losses['spectral_loss_left'], l_vars6)
-    gradsL7 = tape.gradient(losses['spectral_loss_left'], l_vars7)
-    gradsL8 = tape.gradient(losses['spectral_loss_left'], l_vars8)
-    gradsL9 = tape.gradient(losses['spectral_loss_left'], l_vars9)
-    gradsL10 = tape.gradient(losses['spectral_loss_left'], l_vars10)
-    gradsR1 = tape.gradient(losses['spectral_loss_right'], r_vars1)
-    gradsR2 = tape.gradient(losses['spectral_loss_right'], r_vars2)
-    gradsR3 = tape.gradient(losses['spectral_loss_right'], r_vars3)
-    gradsR4 = tape.gradient(losses['spectral_loss_right'], r_vars4)
-    gradsR5 = tape.gradient(losses['spectral_loss_right'], r_vars5)
-    gradsR6 = tape.gradient(losses['spectral_loss_right'], r_vars6)
-    gradsR7 = tape.gradient(losses['spectral_loss_right'], r_vars7)
-    gradsR8 = tape.gradient(losses['spectral_loss_right'], r_vars8)
-    gradsR9 = tape.gradient(losses['spectral_loss_right'], r_vars9)
-    gradsR10 = tape.gradient(losses['spectral_loss_right'], r_vars10)
-    gradsM1, _ = tf.clip_by_global_norm(gradsM1, self.grad_clip_norm)
-    gradsM2, _ = tf.clip_by_global_norm(gradsM2, self.grad_clip_norm)
-    gradsM3, _ = tf.clip_by_global_norm(gradsM3, self.grad_clip_norm)
-    gradsM4, _ = tf.clip_by_global_norm(gradsM4, self.grad_clip_norm)
-    gradsM5, _ = tf.clip_by_global_norm(gradsM5, self.grad_clip_norm)
-    gradsM6, _ = tf.clip_by_global_norm(gradsM6, self.grad_clip_norm)
-    gradsM7, _ = tf.clip_by_global_norm(gradsM7, self.grad_clip_norm)
-    gradsM8, _ = tf.clip_by_global_norm(gradsM8, self.grad_clip_norm)
-    gradsM9, _ = tf.clip_by_global_norm(gradsM9, self.grad_clip_norm)
-    gradsM10, _ = tf.clip_by_global_norm(gradsM10, self.grad_clip_norm)
-    gradsL1, _ = tf.clip_by_global_norm(gradsL1, self.grad_clip_norm)
-    gradsL2, _ = tf.clip_by_global_norm(gradsL2, self.grad_clip_norm)
-    gradsL3, _ = tf.clip_by_global_norm(gradsL3, self.grad_clip_norm)
-    gradsL4, _ = tf.clip_by_global_norm(gradsL4, self.grad_clip_norm)
-    gradsL5, _ = tf.clip_by_global_norm(gradsL5, self.grad_clip_norm)
-    gradsL6, _ = tf.clip_by_global_norm(gradsL6, self.grad_clip_norm)
-    gradsL7, _ = tf.clip_by_global_norm(gradsL7, self.grad_clip_norm)
-    gradsL8, _ = tf.clip_by_global_norm(gradsL8, self.grad_clip_norm)
-    gradsL9, _ = tf.clip_by_global_norm(gradsL9, self.grad_clip_norm)
-    gradsL10, _ = tf.clip_by_global_norm(gradsL10, self.grad_clip_norm)
-    gradsR1, _ = tf.clip_by_global_norm(gradsR1, self.grad_clip_norm)
-    gradsR2, _ = tf.clip_by_global_norm(gradsR2, self.grad_clip_norm)
-    gradsR3, _ = tf.clip_by_global_norm(gradsR3, self.grad_clip_norm)
-    gradsR4, _ = tf.clip_by_global_norm(gradsR4, self.grad_clip_norm)
-    gradsR5, _ = tf.clip_by_global_norm(gradsR5, self.grad_clip_norm)
-    gradsR6, _ = tf.clip_by_global_norm(gradsR6, self.grad_clip_norm)
-    gradsR7, _ = tf.clip_by_global_norm(gradsR7, self.grad_clip_norm)
-    gradsR8, _ = tf.clip_by_global_norm(gradsR8, self.grad_clip_norm)
-    gradsR9, _ = tf.clip_by_global_norm(gradsR9, self.grad_clip_norm)
-    gradsR10, _ = tf.clip_by_global_norm(gradsR10, self.grad_clip_norm)
-    self.optimizer.apply_gradients(zip(gradsM1, m_vars1))
-    self.optimizer.apply_gradients(zip(gradsM2, m_vars2))
-    self.optimizer.apply_gradients(zip(gradsM3, m_vars3))
-    self.optimizer.apply_gradients(zip(gradsM4, m_vars4))
-    self.optimizer.apply_gradients(zip(gradsM5, m_vars5))
-    self.optimizer.apply_gradients(zip(gradsM6, m_vars6))
-    self.optimizer.apply_gradients(zip(gradsM7, m_vars7))
-    self.optimizer.apply_gradients(zip(gradsM8, m_vars8))
-    self.optimizer.apply_gradients(zip(gradsM9, m_vars9))
-    self.optimizer.apply_gradients(zip(gradsM10, m_vars10))
-    self.optimizer.apply_gradients(zip(gradsL1, l_vars1))
-    self.optimizer.apply_gradients(zip(gradsL2, l_vars2))
-    self.optimizer.apply_gradients(zip(gradsL3, l_vars3))
-    self.optimizer.apply_gradients(zip(gradsL4, l_vars4))
-    self.optimizer.apply_gradients(zip(gradsL5, l_vars5))
-    self.optimizer.apply_gradients(zip(gradsL6, l_vars6))
-    self.optimizer.apply_gradients(zip(gradsL7, l_vars7))
-    self.optimizer.apply_gradients(zip(gradsL8, l_vars8))
-    self.optimizer.apply_gradients(zip(gradsL9, l_vars9))
-    self.optimizer.apply_gradients(zip(gradsL10, l_vars10))
-    self.optimizer.apply_gradients(zip(gradsR1, r_vars1))
-    self.optimizer.apply_gradients(zip(gradsR2, r_vars2))
-    self.optimizer.apply_gradients(zip(gradsR3, r_vars3))
-    self.optimizer.apply_gradients(zip(gradsR4, r_vars4))
-    self.optimizer.apply_gradients(zip(gradsR5, r_vars5))
-    self.optimizer.apply_gradients(zip(gradsR6, r_vars6))
-    self.optimizer.apply_gradients(zip(gradsR7, r_vars7))
-    self.optimizer.apply_gradients(zip(gradsR8, r_vars8))
-    self.optimizer.apply_gradients(zip(gradsR9, r_vars9))
-    self.optimizer.apply_gradients(zip(gradsR10, r_vars10))
+      total_loss = sum(losses.values())  # Calculate total loss
+
+    # Calculate gradients for all trainable variables
+    grads = tape.gradient(total_loss, self.model.trainable_variables)
+    
+    # Clip gradients
+    grads, _ = tf.clip_by_global_norm(grads, self.grad_clip_norm)
+    
+    # Apply gradients
+    self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+
     return losses
 
 
