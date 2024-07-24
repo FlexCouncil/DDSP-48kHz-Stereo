@@ -193,8 +193,6 @@ def main(unused_argv):
       model = models.get_model()
       trainer = trainers.Trainer(model, strategy)
 
-    print("GIN CONFIGURATION STRING:")
-    print(gin.config_str())
     train_util.train(data_provider=gin.REQUIRED,
                      trainer=trainer,
                      save_dir=save_dir,
